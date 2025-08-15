@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>三關文字闖關遊戲 - 地圖版</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: "Noto Sans TC", sans-serif;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #1a1a1a;
+      color: #f0f0f0;
+    }
+    #map {
+      width: 100%;
+      max-width: 480px;
+      height: 300px;
+      margin-top: 16px;
+      border-radius: 10px;
+      border: 2px solid #333;
+    }
+    #game-container {
+      max-width: 480px;
+      border: 2px solid #333;
+      border-radius: 10px;
+      padding: 16px;
+      margin: 20px auto;
+      text-align: center;
+      background: #222;
+    }
+    input {
+      font-size: 2rem;
+      padding: 10px;
+      width: 80%;
+      max-width: 300px;
+      border: 3px solid #6699ff;
+      border-radius: 8px;
+      background-color: #222;
+      color: #eee;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.3s ease;
+      margin-bottom: 20px;
+    }
+    input:focus {
+      border-color: #aabfff;
+      box-shadow: 0 0 10px #aabfff;
+    }
+    button {
+      font-size: 1.4rem;
+      padding: 12px 36px;
+      border: none;
+      border-radius: 10px;
+      background-color: #337ab7;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-bottom: 1rem;
+    }
+    button:hover {
+      background-color: #5599e6;
+    }
+    #message {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      min-height: 36px;
+      font-weight: 600;
+    }
+    /* 煙火畫布 */
+    #fireworkCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+
+<h1>三關文字闖關遊戲 - 地圖版</h1>
+
+<div id="map"></div>
+
+<div id="game-container" style="display:none;">
+  <p>請輸入第 <span id="level-display">1</span> 關的字：</p>
+  <input id="inputWord" maxlength="1" autocomplete="off" autofocus />
+  <br />
+  <button id="submitBtn">確定</button>
+  <div id="message"></div>
+</div>
+
+<div id="success-area" style="display:none; max-width:480px; margin:20px auto; text-align:center; color:#aaffaa; text-shadow: 1px 1px 3px #004400;">
+  <h2>恭喜你，闖關成功！</h2>
+  <button id="restartBtn">重新開始</button>
+</div>
+
+<canvas id="fireworkCanvas"></canvas>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+  // 地圖初始化
+  const map = L.map('map').setView([25.034, 121.564], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+  // 闖關邏輯
+  const answers = ["仁", "禮", "義"];
+  const totalLevels = answers.length;
+  let currentLevel = 0;
+
+  const inputWord = document.getElementById("inputWord");
+  const submitBtn = document.getElementById("submitBtn");
+  const messageDiv = document.getElementById("message");
+  const levelDisplay = document.getElementById("level-display");
+  const gameContainer = document.getElementById("game-container");
+  const successArea = document.getElementById("success-area");
+  const restartBtn = document.getElementById("restartBtn");
+
+  // 本地儲存關卡進度
+  const savedLevel = parseInt(localStorage.getItem("gameLevel"));
+  if (savedLevel && savedLevel >= 0 && savedLevel < totalLevels) {
+    currentLevel = savedLevel;
+  }
+
+  function updateUI() {
+    if (currentLevel < totalLevels) {
+      levelDisplay.textContent = currentLevel + 1;
+      inputWord.value = "";
+      inputWord.focus();
+      messageDiv.textContent = "";
+      gameContainer.style.display = "block";
+      successArea.style.display = "none";
+    } else {
+      gameContainer.style.display = "none";
+      successArea.style.display = "block";
+      localStorage.removeItem("gameLevel");
+      showFireworks();
+    }
+  }
+
+  submitBtn.addEventListener("click", () => {
+    const userInput = inputWord.value.trim();
+    if (userInput === "") {
+      messageDiv.style.color = "red";
+      messageDiv.textContent = "請輸入字元";
+      return;
+    }
+    if (userInput === answers[currentLevel]) {
+      currentLevel++;
+      localStorage.setItem("gameLevel", currentLevel);
+      if (currentLevel === totalLevels) {
+        updateUI();
+        return;
+      }
+      messageDiv.style.color = "lightgreen";
+      messageDiv.textContent = "答對了！進入下一關";
+      updateUI();
+    } else {
+      messageDiv.style.color = "pink";
+      messageDiv.textContent = "答錯了，請再試一次";
+      inputWord.value = "";
+      inputWord.focus();
+    }
+  });
+
+  restartBtn.addEventListener("click", () => {
+    currentLevel = 0;
+    localStorage.removeItem("gameLevel");
+    successArea.style.display = "none";
+    gameContainer.style.display = "block";
+    stopFireworks();
+    updateUI();
+  });
+
+  inputWord.addEventListener("keyup", (event) => {
+    if (event.key === "Enter") {
+      submitBtn.click();
+    }
+  });
+
+  // 地圖標記位置及事件（可修改成你的實際位置）
+  const checkpoints = [
+    { coords: [25.034, 121.564], level: 0, title: "關卡1" },
+    { coords: [25.035, 121.570], level: 1, title: "關卡2" },
+    { coords: [25.030, 121.560], level: 2, title: "關卡3" }
+  ];
+
+  checkpoints.forEach(({ coords, level, title }) => {
+    const marker = L.marker(coords).addTo(map).bindTooltip(title, {permanent:true, direction:"top"});
+    marker.on('click', () => {
+      if (currentLevel === level) {
+        alert(`點擊${title}，開始闖關`);
+        gameContainer.style.display = "block";
+        successArea.style.display = "none";
+        updateUI();
+      } else if (currentLevel > level) {
+        alert(`${title} 已通過，請挑戰下一關`);
+      } else {
+        alert(`請先完成前面關卡`);
+      }
+    });
+  });
+
+  updateUI();
+
+  // 煙火動畫（略，和之前一樣）
+  const canvas = document.getElementById("fireworkCanvas");
+  const ctx = canvas.getContext("2d");
+  let cw, ch;
+  function resizeCanvas() {
+    cw = canvas.width = window.innerWidth;
+    ch = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  class Firework {
+    constructor() {
+      this.x = Math.random() * cw;
+      this.y = ch;
+      this.targetY = Math.random() * ch / 2 + ch / 4;
+      this.exploded = false;
+      this.particles = [];
+      this.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
+    }
+    update() {
+      if (!this.exploded) {
+        this.y -= 6;
+        if (this.y <= this.targetY) {
+          this.exploded = true;
+          this.createParticles();
+        }
+      }
+      this.particles.forEach((p) => p.update());
+      this.particles = this.particles.filter((p) => !p.dead);
+    }
+    createParticles() {
+      for (let i = 0; i < 30; i++) {
+        this.particles.push(new Particle(this.x, this.y, this.color));
+      }
+    }
+    draw() {
+      if (!this.exploded) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+      }
+      this.particles.forEach((p) => p.draw());
+    }
+    isDone() {
+      return this.exploded && this.particles.length === 0;
+    }
+  }
+
+  class Particle {
+    constructor(x, y, color) {
+      this.x = x;
+      this.y = y;
+      this.radius = 2;
+      this.color = color;
+      this.vx = (Math.random() - 0.5) * 5;
+      this.vy = (Math.random() - 0.5) * 5;
+      this.gravity = 0.1;
+      this.alpha = 1;
+      this.dead = false;
+    }
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      this.vy += this.gravity;
+      this.alpha -= 0.02;
+      if (this.alpha <= 0) {
+        this.dead = true;
+      }
+    }
+    draw() {
+      ctx.save();
+      ctx.globalAlpha = this.alpha;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = this.color;
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  let fireworks = [];
+  let animationId;
+
+  function showFireworks() {
+    fireworks = [];
+    for (let i = 0; i < 5; i++) {
+      fireworks.push(new Firework());
+    }
+    animate();
+    setTimeout(stopFireworks, 10000);
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, cw, ch);
+    fireworks.forEach((fw) => {
+      fw.update();
+      fw.draw();
+    });
+    fireworks = fireworks.filter(fw => !fw.isDone());
+
+    if (fireworks.length > 0) {
+      animationId = requestAnimationFrame(animate);
+    }
+  }
+
+  function stopFireworks() {
+    cancelAnimationFrame(animationId);
+    ctx.clearRect(0, 0, cw, ch);
+  }
+</script>
+
+</body>
+</html>

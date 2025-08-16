@@ -3,8 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>三關文字闖關遊戲 - 靜態地圖互動版</title>
+  <title>三關文字闖關遊戲 - 地圖互動版</title>
   <style>
+    *{
+      margin: 0;
+      padding: 0;
+    }
     body {
       font-family: "Noto Sans TC", sans-serif;
       background: #1a1a1a;
@@ -105,16 +109,23 @@
       color: white;
       cursor: pointer;
       transition: background-color 0.3s ease;
-      margin-bottom: 1rem;
+      margin: 1rem;
     }
     button:hover {
       background-color: #5599e6;
     }
     #message {
       font-size: 1.3rem;
-      margin-bottom: 1rem;
+      /*margin-bottom: 1rem;*/
       min-height: 36px;
       font-weight: 600;
+    }
+    #status {
+      text-align: left;
+      max-width: 480px;
+      margin: 0 auto 10px auto;
+      font-size: 1rem;
+      color: #aaffaa;
     }
     #success-area {
       max-width: 480px;
@@ -124,7 +135,6 @@
       text-shadow: 1px 1px 3px #004400;
       display: none;
     }
-
     #action-buttons {
       max-width: 480px;
       margin: 10px auto 0;
@@ -135,12 +145,11 @@
       padding: 10px 30px;
     }
 
-    /* 闖關成功圖片 */
+    /* 闖關成功圖片動畫 */
     @keyframes zoomIn {
       from { transform: scale(0.5); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
-
 
     /* 煙火畫布 */
     #fireworkCanvas {
@@ -156,8 +165,7 @@
 </head>
 
 <body>
-
-<!-- HTML 範本部分放在 body 開頭 -->
+<!-- 遊戲開始說明視窗 -->
 <div id="intro-modal" style="
   position: fixed; top: 0; left: 0; right:0; bottom: 0;
   background-color: rgba(0,0,0,0.8);
@@ -165,8 +173,9 @@
   display: flex; flex-direction: column; justify-content: center; align-items: center;
   padding: 20px; text-align: center; z-index: 10000;
 ">
+  <!-- <h1><img src="./kylin1.png" alt="成功圖片" style="max-width: 40vw; max-height: 30vh;" /></h1> -->
   <h2>遊戲說明</h2>
-  <p>歡迎參加本次活動，請依序找到關卡並輸入答案。按確定後開始遊戲。</p>
+  <h3 style="margin: 10px">歡迎參加本次活動，請找到關卡並輸入答案。按確定後開始遊戲。</h3>
   <button id="startGameBtn" style="
     margin-top: 20px;
     font-size: 1.5rem;
@@ -180,23 +189,19 @@
   <!-- 這裡放你的地圖與遊戲內容的所有元素 -->
 </div>
 
-
-<h1>三關文字闖關遊戲 - 靜態地圖互動版</h1>
+<h1>走三關，成上官</h1>
 
 <div id="map-container">
   <img id="map-image" src="main.jpg" alt="地圖" />
   <!-- 標記點將用 JS 動態產生 -->
 </div>
 
-<div id="action-buttons">
-  <button id="restartGameBtn">再玩一次</button>
-  <button id="endGameBtn">結束遊戲</button>
-</div>
+<div id="status"></div>
 
 <div id="game-container">
   <p>請回答關卡 <span id="level-display">1</span> 的字：</p>
   <input id="inputWord" maxlength="1" autocomplete="off" autofocus />
-  <br />
+  <!-- <br /> -->
   <button id="submitBtn">確定</button>
   <div id="message"></div>
 </div>
@@ -207,33 +212,35 @@
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background-color: rgba(0,0,0,0.8);
-  display: flex;
+
   flex-direction: column;
   justify-content: center;
   align-items: center;
   z-index: 11000;
   animation: zoomIn 0.5s ease forwards;
   ">
-  <div style="border-radius: 15px; box-shadow: 0 0 20px #ffe;">
+  <div style="border-radius: 15px; box-shadow: 0 0 20px #ffe;text-align:center">
     <img src="./kylin1.png" alt="成功圖片" style="max-width: 80vw; max-height: 60vh;" />
-  <p style="color: #fff; font-size: 2.5rem; margin-top: 8px; text-align:center">過關</p>
-  </div>
-  
-  <button id="closeOverlayBtn" style="
+    <p style="color: #fff; font-size: 2.5rem; margin-top: 8px">過關</p>
+    <button id="closeOverlayBtn" style="
     margin-top: 20px;
     padding: 10px 30px;
     font-size: 1.2rem;
     cursor: pointer;
-  ">好</button>
+    ">好</button>
+  </div>
+  
+  
 </div>
-
-
-
-
 
 <div id="success-area">
   <h2>恭喜你，所有關卡完成！</h2>
-  <button id="restartBtn">重新開始</button>
+  <!-- <button id="restartBtn">重新開始</button> -->
+</div>
+
+<div id="action-buttons">
+  <button id="restartGameBtn">再玩一次</button>
+  <button id="endGameBtn">結束遊戲</button>
 </div>
 
 <canvas id="fireworkCanvas"></canvas>
@@ -241,15 +248,15 @@
 <script>
 
   // JavaScript 部分（放在遊戲 JS 程式碼前面或 DOMContentLoaded 裡）
-const introModal = document.getElementById("intro-modal");
-const startGameBtn = document.getElementById("startGameBtn");
-const gameWrapper = document.getElementById("game-wrapper");
+  const introModal = document.getElementById("intro-modal");
+  const startGameBtn = document.getElementById("startGameBtn");
+  const gameWrapper = document.getElementById("game-wrapper");
 
-startGameBtn.addEventListener("click", () => {
-  introModal.style.display = "none";  // 隱藏說明框
-  gameWrapper.style.display = "block"; // 顯示遊戲主區塊
-  // （如果需要，也可以呼叫初始化遊戲或載入進度的函式）
-});
+  startGameBtn.addEventListener("click", () => {
+    introModal.style.display = "none";  // 隱藏說明框
+    gameWrapper.style.display = "block"; // 顯示遊戲主區塊
+    // （如果需要，也可以呼叫初始化遊戲或載入進度的函式）
+  });
 
 
 
@@ -271,10 +278,12 @@ startGameBtn.addEventListener("click", () => {
   const submitBtn = document.getElementById("submitBtn");
   const messageDiv = document.getElementById("message");
   const successArea = document.getElementById("success-area");
-  const restartBtn = document.getElementById("restartBtn");
+  /*const restartBtn = document.getElementById("restartBtn");*/
   const restartGameBtn = document.getElementById("restartGameBtn");
   const endGameBtn = document.getElementById("endGameBtn");
   const mapImage = document.getElementById("map-image");
+  const statusDiv = document.getElementById("status");
+  const totalLevels = checkpoints.length;
 
   function createMarkers() {
     const oldMarkers = document.querySelectorAll(".marker");
@@ -321,63 +330,65 @@ startGameBtn.addEventListener("click", () => {
   }
 
   const successOverlay = document.getElementById("success-overlay");
-const closeOverlayBtn = document.getElementById("closeOverlayBtn");
+  const closeOverlayBtn = document.getElementById("closeOverlayBtn");
 
-// 闖關成功後顯示覆蓋層
-function showSuccessOverlay() {
-  successOverlay.style.display = "flex";
-}
-
-// 按下「好」按鈕關閉覆蓋層
-closeOverlayBtn.addEventListener("click", () => {
-  successOverlay.style.display = "none";
-});
-
-submitBtn.addEventListener("click", () => {
-  const userInput = inputWord.value.trim();
-  if (userInput === "") {
-    messageDiv.style.color = "red";
-    messageDiv.textContent = "請輸入字元";
-    return;
+  // 闖關成功後顯示覆蓋層
+  function showSuccessOverlay() {
+    successOverlay.style.display = "flex";
   }
-  if (userInput === answers[currentLevel]) {
-    finishedLevels[currentLevel] = true;
-    localStorage.setItem("finishedLevels", JSON.stringify(finishedLevels));
-    messageDiv.style.color = "lightgreen";
-    messageDiv.textContent = `關卡 ${currentLevel + 1} 答對了！`;
-    createMarkers();
-    if (finishedLevels.every(val => val === true)) {
-      currentLevel = null;
-      gameContainer.style.display = "none";
-      successArea.style.display = "block";
-      showFireworks();
-    } else {
-      currentLevel = null;
-      gameContainer.style.display = "none";
-      showSuccessOverlay();  // 顯示覆蓋層代替 alert
-    }
-  } else {
-    messageDiv.style.color = "pink";
-    messageDiv.textContent = "答錯了，請再試一次";
-    inputWord.value = "";
-    inputWord.focus();
-  }
-});
 
-
-  restartBtn.addEventListener("click", () => {
-    resetGameData();
+  // 按下「好」按鈕關閉覆蓋層
+  closeOverlayBtn.addEventListener("click", () => {
+    successOverlay.style.display = "none";
   });
 
-  function resetGameData() {
-    finishedLevels = [false, false, false];
-    localStorage.removeItem("finishedLevels");
-    currentLevel = null;
-    createMarkers();
-    gameContainer.style.display = "none";
-    successArea.style.display = "none";
-    stopFireworks();
-  }
+  submitBtn.addEventListener("click", () => {
+    const userInput = inputWord.value.trim();
+    if (userInput === "") {
+      messageDiv.style.color = "red";
+      messageDiv.textContent = "請輸入字元";
+      return;
+    }
+    if (userInput === answers[currentLevel]) {
+      finishedLevels[currentLevel] = true;
+      localStorage.setItem("finishedLevels", JSON.stringify(finishedLevels));
+      messageDiv.style.color = "lightgreen";
+      messageDiv.textContent = `關卡 ${currentLevel + 1} 答對了！`;
+      updateStatus();
+      createMarkers();
+      if (finishedLevels.every(val => val === true)) {
+        currentLevel = null;
+        gameContainer.style.display = "none";
+        successArea.style.display = "block";
+        showFireworks();
+      } else {
+        currentLevel = null;
+        gameContainer.style.display = "none";
+        showSuccessOverlay();  // 顯示覆蓋層代替 alert
+      }
+    } else {
+      messageDiv.style.color = "pink";
+      messageDiv.textContent = "答錯了，請再試一次";
+      inputWord.value = "";
+      inputWord.focus();
+    }
+    });
+
+    /*
+    restartBtn.addEventListener("click", () => {
+      resetGameData();
+    });
+    */
+    function resetGameData() {
+      finishedLevels = [false, false, false];
+      localStorage.removeItem("finishedLevels");
+      currentLevel = null;
+      updateStatus();
+      createMarkers();
+      gameContainer.style.display = "none";
+      successArea.style.display = "none";
+      stopFireworks();
+    }
 
   restartGameBtn.addEventListener("click", () => {
     resetGameData();
@@ -386,7 +397,17 @@ submitBtn.addEventListener("click", () => {
 
   endGameBtn.addEventListener("click", () => {
     resetGameData();
-    alert("感謝遊玩，遊戲已結束！");
+    //結束感謝頁面
+    const endMessage = document.createElement("div");
+    endMessage.style.color = "lightgreen";
+    endMessage.style.fontSize = "1.5rem";
+    endMessage.style.textAlign = "center";
+    endMessage.style.marginTop = "40px";
+    endMessage.textContent = "感謝您的遊玩，遊戲已結束！";
+
+document.body.appendChild(endMessage);
+
+    //alert("感謝遊玩，遊戲已結束！");
     // 可以導向其他頁面
     // window.location.href = "https://yourwebsite.com/thankyou.html";
   });
@@ -400,7 +421,18 @@ submitBtn.addEventListener("click", () => {
   window.addEventListener("load", () => {
     createMarkers();
     updateUI();
+    updateStatus();
   });
+
+  // 簡易呈現哪關完成
+  function updateStatus() {
+    let statusHTML = "關卡完成狀態：<br>";
+    for(let i = 0; i < totalLevels; i++) {
+      statusHTML += `關卡 ${i+1}: `;
+      statusHTML += finishedLevels[i] ? '<span class="completed-check">✔ 已完成</span><br>' : "未完成<br>";
+    }
+    statusDiv.innerHTML = statusHTML;
+  }
 
   // 煙火動畫相關程式碼
   const canvas = document.getElementById("fireworkCanvas");
@@ -424,7 +456,7 @@ submitBtn.addEventListener("click", () => {
     }
     update() {
       if (!this.exploded) {
-        this.y -= 6;
+        this.y -= 5;  // 上升速度調慢，延長時間
         if (this.y <= this.targetY) {
           this.exploded = true;
           this.createParticles();
@@ -434,14 +466,14 @@ submitBtn.addEventListener("click", () => {
       this.particles = this.particles.filter((p) => !p.dead);
     }
     createParticles() {
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 50; i++) { // 粒子數量從30增加到50
         this.particles.push(new Particle(this.x, this.y, this.color));
       }
     }
     draw() {
       if (!this.exploded) {
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, 8, 0, Math.PI * 2); // 放大主體圓尺寸
         ctx.fillStyle = this.color;
         ctx.fill();
       }
@@ -456,7 +488,7 @@ submitBtn.addEventListener("click", () => {
     constructor(x, y, color) {
       this.x = x;
       this.y = y;
-      this.radius = 2;
+      this.radius = 4;  // 從2改成4，粒子變大
       this.color = color;
       this.vx = (Math.random() - 0.5) * 5;
       this.vy = (Math.random() - 0.5) * 5;
@@ -468,7 +500,7 @@ submitBtn.addEventListener("click", () => {
       this.x += this.vx;
       this.y += this.vy;
       this.vy += this.gravity;
-      this.alpha -= 0.02;
+      this.alpha -= 0.01;  // 減慢消失速度
       if (this.alpha <= 0) {
         this.dead = true;
       }
@@ -489,7 +521,7 @@ submitBtn.addEventListener("click", () => {
 
   function showFireworks() {
     fireworks = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 30; i++) {
       fireworks.push(new Firework());
     }
     animate();

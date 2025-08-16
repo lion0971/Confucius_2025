@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>三關文字闖關遊戲</title>
+  <style>
+    /* 基本重置及排版 */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: "Noto Sans TC", sans-serif;
+      max-width: 480px;
+      margin: 20px auto;
+      padding: 16px;
+      border: 2px solid #333;
+      border-radius: 10px;
+      text-align: center;
+      background: #1a1a1a;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow-x: hidden;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      font-size: 1.2rem;
+    }
+    input {
+      font-size: 2rem;
+      padding: 10px;
+      width: 80%;
+      max-width: 300px;
+      margin: 16px auto 20px auto;
+      border: 3px solid #6699ff;
+      border-radius: 8px;
+      background-color: #222;
+      color: #eee;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    input:focus {
+      border-color: #aabfff;
+      box-shadow: 0 0 10px #aabfff;
+    }
+    button {
+      font-size: 1.4rem;
+      padding: 12px 36px;
+      border: none;
+      border-radius: 10px;
+      background-color: #337ab7;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-bottom: 1rem;
+    }
+    button:hover {
+      background-color: #5599e6;
+    }
+    #message {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      min-height: 36px;
+      font-weight: 600;
+    }
+    #success-area h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #aaffaa;
+      text-shadow: 1px 1px 3px #004400;
+    }
+
+    /* 響應式 */
+    @media (max-width: 600px) {
+      body {
+        margin: 10px;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.6rem;
+      }
+      input {
+        font-size: 1.6rem;
+        width: 90%;
+      }
+      button {
+        font-size: 1.2rem;
+        padding: 10px 24px;
+      }
+      #success-area h2 {
+        font-size: 1.5rem;
+      }
+    }
+
+    /* 煙火畫布 */
+    #fireworkCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <h1>三關文字闖關遊戲</h1>
+  <div id="message"></div>
+  <div id="game-area">
+    <p>請輸入第 <span id="level-display">1</span> 關的字：</p>
+    <input id="inputWord" maxlength="1" autocomplete="off" autofocus />
+    <br />
+    <button id="submitBtn">確定</button>
+  </div>
+  <div id="success-area" style="display:none;">
+    <h2>恭喜你，闖關成功！</h2>
+    <button id="restartBtn">重新開始</button>
+  </div>
+
+  <canvas id="fireworkCanvas"></canvas>
+
+  <script>
+    /* 闖關邏輯 */
+    const answers = ["仁", "禮", "義"];
+    const totalLevels = answers.length;
+    let currentLevel = 0;
+
+    const savedLevel = parseInt(localStorage.getItem("gameLevel"));
+    if (savedLevel && savedLevel >= 0 && savedLevel < totalLevels) {
+      currentLevel = savedLevel;
+    }
+
+    const inputWord = document.getElementById("inputWord");
+    const submitBtn = document.getElementById("submitBtn");
+    const messageDiv = document.getElementById("message");
+    const levelDisplay = document.getElementById("level-display");
+    const gameArea = document.getElementById("game-area");
+    const successArea = document.getElementById("success-area");
+    const restartBtn = document.getElementById("restartBtn");
+
+    function updateUI() {
+      if (currentLevel < totalLevels) {
+        levelDisplay.textContent = currentLevel + 1;
+        inputWord.value = "";
+        inputWord.focus();
+        messageDiv.textContent = "";
+      } else {
+        gameArea.style.display = "none";
+        successArea.style.display = "block";
+        localStorage.removeItem("gameLevel");
+        showFireworks();
+      }
+    }
+
+    submitBtn.addEventListener("click", () => {
+      const userInput = inputWord.value.trim();
+      if (userInput === "") {
+        messageDiv.style.color = "red";
+        messageDiv.textContent = "請輸入字元";
+        return;
+      }
+      if (userInput === answers[currentLevel]) {
+        currentLevel++;
+        localStorage.setItem("gameLevel", currentLevel);
+        if (currentLevel === totalLevels) {
+          updateUI();
+          return;
+        }
+        messageDiv.style.color = "lightgreen";
+        messageDiv.textContent = "答對了！進入下一關";
+        updateUI();
+      } else {
+        messageDiv.style.color = "pink";
+        messageDiv.textContent = "答錯了，請再試一次";
+        inputWord.value = "";
+        inputWord.focus();
+      }
+    });
+
+    restartBtn.addEventListener("click", () => {
+      currentLevel = 0;
+      localStorage.removeItem("gameLevel");
+      successArea.style.display = "none";
+      gameArea.style.display = "block";
+      stopFireworks();
+      updateUI();
+    });
+
+    inputWord.addEventListener("keyup", (event) => {
+      if (event.key === "Enter") {
+        submitBtn.click();
+      }
+    });
+
+    updateUI();
+
+    /* 簡單煙火動畫實作 */
+    const canvas = document.getElementById("fireworkCanvas");
+    const ctx = canvas.getContext("2d");
+    let cw, ch;
+    function resizeCanvas() {
+      cw = canvas.width = window.innerWidth;
+      ch = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Firework {
+      constructor() {
+        this.x = Math.random() * cw;
+        this.y = ch;
+        this.targetY = Math.random() * ch / 2 + ch / 4;
+        this.exploded = false;
+        this.particles = [];
+        this.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
+      }
+      update() {
+        if (!this.exploded) {
+          this.y -= 6;
+          if (this.y <= this.targetY) {
+            this.exploded = true;
+            this.createParticles();
+          }
+        }
+        this.particles.forEach((p) => p.update());
+        this.particles = this.particles.filter((p) => !p.dead);
+      }
+      createParticles() {
+        for (let i = 0; i < 30; i++) {
+          this.particles.push(new Particle(this.x, this.y, this.color));
+        }
+      }
+      draw() {
+        if (!this.exploded) {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.fill();
+        }
+        this.particles.forEach((p) => p.draw());
+      }
+      isDone() {
+        return this.exploded && this.particles.length === 0;
+      }
+    }
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.radius = 2;
+        this.color = color;
+        this.vx = (Math.random() - 0.5) * 5;
+        this.vy = (Math.random() - 0.5) * 5;
+        this.gravity = 0.1;
+        this.alpha = 1;
+        this.dead = false;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += this.gravity;
+        this.alpha -= 0.02;
+        if (this.alpha <= 0) {
+          this.dead = true;
+        }
+      }
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    let fireworks = [];
+    let animationId;
+
+    function showFireworks() {
+      fireworks = [];
+      for(let i = 0; i < 5; i++) {
+        fireworks.push(new Firework());
+      }
+      animate();
+      // 自動停止煙火10秒後
+      setTimeout(stopFireworks, 10000);
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, cw, ch);
+      fireworks.forEach((fw) => {
+        fw.update();
+        fw.draw();
+      })
+      fireworks = fireworks.filter(fw => !fw.isDone());
+
+      if (fireworks.length > 0) {
+        animationId = requestAnimationFrame(animate);
+      }
+    }
+
+    function stopFireworks() {
+      cancelAnimationFrame(animationId);
+      ctx.clearRect(0, 0, cw, ch);
+    }
+  </script>
+</body>
+</html>

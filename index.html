@@ -188,11 +188,6 @@
   <!-- 標記點將用 JS 動態產生 -->
 </div>
 
-<div id="action-buttons">
-  <button id="restartGameBtn">再玩一次</button>
-  <button id="endGameBtn">結束遊戲</button>
-</div>
-
 <div id="game-container">
   <p>請回答關卡 <span id="level-display">1</span> 的字：</p>
   <input id="inputWord" maxlength="1" autocomplete="off" autofocus />
@@ -207,7 +202,7 @@
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background-color: rgba(0,0,0,0.8);
-  display: flex;
+
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -227,13 +222,15 @@
   ">好</button>
 </div>
 
-
-
-
-
 <div id="success-area">
   <h2>恭喜你，所有關卡完成！</h2>
-  <button id="restartBtn">重新開始</button>
+  <!-- <button id="restartBtn">重新開始</button> -->
+</div>
+
+
+<div id="action-buttons">
+  <button id="restartGameBtn">再玩一次</button>
+  <button id="endGameBtn">結束遊戲</button>
 </div>
 
 <canvas id="fireworkCanvas"></canvas>

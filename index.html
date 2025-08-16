@@ -124,6 +124,7 @@
       text-shadow: 1px 1px 3px #004400;
       display: none;
     }
+
     #action-buttons {
       max-width: 480px;
       margin: 10px auto 0;
@@ -133,6 +134,13 @@
       margin: 0 10px;
       padding: 10px 30px;
     }
+
+    /* 闖關成功圖片 */
+    @keyframes zoomIn {
+      from { transform: scale(0.5); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
 
     /* 煙火畫布 */
     #fireworkCanvas {
@@ -146,6 +154,7 @@
     }
   </style>
 </head>
+
 <body>
 
 <!-- HTML 範本部分放在 body 開頭 -->
@@ -191,6 +200,36 @@
   <button id="submitBtn">確定</button>
   <div id="message"></div>
 </div>
+
+<!-- 闖關成功圖片 -->
+<div id="success-overlay" style="
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 11000;
+  animation: zoomIn 0.5s ease forwards;
+  ">
+  <div style="border-radius: 15px; box-shadow: 0 0 20px #ffe;">
+    <img src="./kylin1.png" alt="成功圖片" style="max-width: 80vw; max-height: 60vh;" />
+  <p style="color: #fff; font-size: 2.5rem; margin-top: 8px; text-align:center">過關</p>
+  </div>
+  
+  <button id="closeOverlayBtn" style="
+    margin-top: 20px;
+    padding: 10px 30px;
+    font-size: 1.2rem;
+    cursor: pointer;
+  ">好</button>
+</div>
+
+
+
+
 
 <div id="success-area">
   <h2>恭喜你，所有關卡完成！</h2>
@@ -281,36 +320,50 @@ startGameBtn.addEventListener("click", () => {
     }
   }
 
-  submitBtn.addEventListener("click", () => {
-    const userInput = inputWord.value.trim();
-    if (userInput === "") {
-      messageDiv.style.color = "red";
-      messageDiv.textContent = "請輸入字元";
-      return;
-    }
-    if (userInput === answers[currentLevel]) {
-      finishedLevels[currentLevel] = true;
-      localStorage.setItem("finishedLevels", JSON.stringify(finishedLevels));
-      messageDiv.style.color = "lightgreen";
-      messageDiv.textContent = `關卡 ${currentLevel + 1} 答對了！`;
-      createMarkers();
-      if (finishedLevels.every(val => val === true)) {
-        currentLevel = null;
-        gameContainer.style.display = "none";
-        successArea.style.display = "block";
-        showFireworks();
-      } else {
-        currentLevel = null;
-        gameContainer.style.display = "none";
-        alert("關卡完成，請點選下一關！");
-      }
+  const successOverlay = document.getElementById("success-overlay");
+const closeOverlayBtn = document.getElementById("closeOverlayBtn");
+
+// 闖關成功後顯示覆蓋層
+function showSuccessOverlay() {
+  successOverlay.style.display = "flex";
+}
+
+// 按下「好」按鈕關閉覆蓋層
+closeOverlayBtn.addEventListener("click", () => {
+  successOverlay.style.display = "none";
+});
+
+submitBtn.addEventListener("click", () => {
+  const userInput = inputWord.value.trim();
+  if (userInput === "") {
+    messageDiv.style.color = "red";
+    messageDiv.textContent = "請輸入字元";
+    return;
+  }
+  if (userInput === answers[currentLevel]) {
+    finishedLevels[currentLevel] = true;
+    localStorage.setItem("finishedLevels", JSON.stringify(finishedLevels));
+    messageDiv.style.color = "lightgreen";
+    messageDiv.textContent = `關卡 ${currentLevel + 1} 答對了！`;
+    createMarkers();
+    if (finishedLevels.every(val => val === true)) {
+      currentLevel = null;
+      gameContainer.style.display = "none";
+      successArea.style.display = "block";
+      showFireworks();
     } else {
-      messageDiv.style.color = "pink";
-      messageDiv.textContent = "答錯了，請再試一次";
-      inputWord.value = "";
-      inputWord.focus();
+      currentLevel = null;
+      gameContainer.style.display = "none";
+      showSuccessOverlay();  // 顯示覆蓋層代替 alert
     }
-  });
+  } else {
+    messageDiv.style.color = "pink";
+    messageDiv.textContent = "答錯了，請再試一次";
+    inputWord.value = "";
+    inputWord.focus();
+  }
+});
+
 
   restartBtn.addEventListener("click", () => {
     resetGameData();

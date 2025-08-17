@@ -110,9 +110,19 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
       margin: 1rem;
+      /* 外陰影 + 內陰影產生立體感 */
+      box-shadow:
+      0 4px 16px rgba(0,0,0,0.2),        /* 外陰影 */
+      0 1px 4px rgba(255,255,255,0.4) inset, /* 內陰影（淺色，亮邊效果） */
+      0 -3px 8px rgba(0,0,0,0.15) inset;     /* 內陰影（暗邊效果） */
+      transition: box-shadow 0.3s;
     }
     button:hover {
       background-color: #5599e6;
+      box-shadow:
+      0 6px 24px rgba(0,0,0,0.3),           /* 加強外陰影 */
+      0 2px 8px rgba(255,255,255,0.5) inset, /* 加強亮邊效果 */
+      0 -4px 12px rgba(0,0,0,0.2) inset;     /* 加強暗邊效果 */
     }
     #message {
       font-size: 1.3rem;
@@ -397,6 +407,12 @@
 
   endGameBtn.addEventListener("click", () => {
     resetGameData();
+
+    // 隱藏 body 底下的所有元素
+    Array.from(document.body.children).forEach(child => {
+      child.style.display = "none";
+    });
+
     //結束感謝頁面
     const endMessage = document.createElement("div");
     endMessage.style.color = "lightgreen";

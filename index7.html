@@ -202,7 +202,7 @@
   <!-- 這裡放你的地圖與遊戲內容的所有元素 -->
 <!-- </div> -->
 
-<h2>請點藍圈作答</h2>
+<h2>請點圖上藍標答題</h2>
 
 <div id="map-container">
   <img id="map-image" src="main.jpg" alt="地圖" />
@@ -363,80 +363,90 @@
   });
 
   submitBtn.addEventListener("click", () => {
-    const userInput = inputWord.value.trim();
-    if (userInput === "") {
-      messageDiv.style.color = "red";
-      messageDiv.textContent = "請輸入字元";
-      return;
-    }
-    if (userInput === answers[currentLevel]) {
-      finishedLevels[currentLevel] = true;
-      localStorage.setItem("finishedLevels", JSON.stringify(finishedLevels));
-      messageDiv.style.color = "lightgreen";
-      messageDiv.textContent = `關卡 ${currentLevel + 1} 答對了！`;
-      updateStatus();
-      createMarkers();
-      if (finishedLevels.every(val => val === true)) {
-        currentLevel = null;
-        gameContainer.style.display = "none";
-        successArea.style.display = "block";
-        showFireworks();
-      } else {
-        currentLevel = null;
-        gameContainer.style.display = "none";
-        showSuccessOverlay();  // 顯示覆蓋層代替 alert
-      }
-    } else {
-      messageDiv.style.color = "pink";
-      messageDiv.textContent = "答錯了，請再試一次";
-      inputWord.value = "";
-      inputWord.focus();
-    }
-    });
+  const userInput = inputWord.value.trim();                 // 讀取輸入框 inputWord 的值，trim() 去掉前後空白。
 
-    /*
-    restartBtn.addEventListener("click", () => {
-      resetGameData();
-    });
-    */
-    function resetGameData() {
-      finishedLevels = [false, false, false];
-      localStorage.removeItem("finishedLevels");
-      currentLevel = null;
-      updateStatus();
-      createMarkers();
-      gameContainer.style.display = "none";
-      successArea.style.display = "none";
-      stopFireworks();
-    }
+  if (userInput === "") {
+    messageDiv.style.color = "red";
+    messageDiv.textContent = "請輸入字元";
+    return;                                                 // 結束這次點擊事件處理（後面不再往下跑）。
+  }
 
-  restartGameBtn.addEventListener("click", () => {
-    resetGameData();
-    alert("遊戲已重新開始！");
+  if (userInput === answers[currentLevel]) {
+    finishedLevels[currentLevel] = true;                    // 標記該關卡為已完成（將陣列對應位置設為 true）。
+    localStorage.setItem(                                   // 把 finishedLevels 陣列存進瀏覽器 localStorage，
+      "finishedLevels",                                     // key 名叫 "finishedLevels"，
+      JSON.stringify(finishedLevels)                        // 值要用 JSON.stringify 轉成字串才可存。
+    );
+    messageDiv.style.color = "lightgreen";
+    messageDiv.textContent = `關卡 ${currentLevel + 1} 答對了！`; // 顯示「第幾關答對了」的文字。
+
+    updateStatus();                                         // 更新畫面上與關卡狀態相關的區塊（你自訂的函式）。
+    createMarkers();                                        // 重新建立或更新地圖/標記/進度指示（你自訂的函式）。
+
+    if (finishedLevels.every(val => val === true)) {        // 檢查是否「所有」關卡都完成（陣列每一項都是 true）。
+      currentLevel = null;                                  // 把當前關卡清空（設為 null，代表目前沒有在作答）。
+      gameContainer.style.display = "none";                 // 隱藏作答區域。
+      successArea.style.display = "block";                  // 顯示最終通關畫面（全部通關用的區域）。
+      showFireworks();                                      // 觸發煙火或慶祝動畫（你自訂的函式）。
+    } else {                                                // 還沒全破，但這一關剛答對。
+      currentLevel = null;                                  // 同樣清空當前關卡（回到未選關卡狀態）。
+      gameContainer.style.display = "none";                 // 先把作答區域收起來。
+      showSuccessOverlay();  // 顯示覆蓋層代替 alert         // 顯示單關卡成功的覆蓋層（你自訂的函式，取代 alert）。
+    }
+  } else {
+    messageDiv.style.color = "pink";                        // 錯誤訊息用粉紅色字（你自訂的風格）。
+    messageDiv.textContent = "答錯了，請再試一次";           // 顯示答錯提示。
+    inputWord.value = "";                                   // 清空輸入框。
+    inputWord.focus();                                      // 把游標焦點放回輸入框，方便立刻再輸入。
+  }
+});
+
+/*
+restartBtn.addEventListener("click", () => {
+  resetGameData();
+});
+*/
+
+function resetGameData() {                                  // 定義重置遊戲資料的函式。
+  finishedLevels = [false, false, false];                   // 將三關狀態重設為都未完成。
+  localStorage.removeItem("finishedLevels");                // 從 localStorage 移除狀態（下一次進來會視為全新）。
+  currentLevel = null;                                      // 清空當前關卡選擇。
+  updateStatus();                                           // 重新更新 UI 狀態顯示。
+  createMarkers();                                          // 重新建立/刷新標記或進度。
+  gameContainer.style.display = "none";                     // 隱藏作答區域。
+  successArea.style.display = "none";                       // 隱藏最終通關區域。
+  stopFireworks();                                          // 停止慶祝動畫（你自訂的函式）。
+}
+
+restartGameBtn.addEventListener("click", () => {
+  resetGameData();
+  alert("遊戲已重新開始！");
+});
+
+
+endGameBtn.addEventListener("click", () => {
+  resetGameData();
+
+  // 隱藏 body 底下的所有元素
+  // 取得 <body> 底下的所有「直接子元素」（HTMLCollection)並用 Array.from() 把它轉成真正的陣列，方便使用 forEach
+  Array.from(document.body.children).forEach(child => {
+    child.style.display = "none";
   });
 
-  endGameBtn.addEventListener("click", () => {
-    resetGameData();
+  //結束感謝頁面
+  const endMessage = document.createElement("div");
+  endMessage.style.color = "lightgreen";
+  endMessage.style.fontSize = "1.5rem";
+  endMessage.style.textAlign = "center";
+  endMessage.style.marginTop = "40px";
+  endMessage.textContent = "感謝您的遊玩，遊戲已結束！";
 
-    // 隱藏 body 底下的所有元素
-    Array.from(document.body.children).forEach(child => {
-      child.style.display = "none";
-    });
+  document.body.appendChild(endMessage);
 
-    //結束感謝頁面
-    const endMessage = document.createElement("div");
-    endMessage.style.color = "lightgreen";
-    endMessage.style.fontSize = "1.5rem";
-    endMessage.style.textAlign = "center";
-    endMessage.style.marginTop = "40px";
-    endMessage.textContent = "感謝您的遊玩，遊戲已結束！";
-
-document.body.appendChild(endMessage);
-
-    //alert("感謝遊玩，遊戲已結束！");
-    // 可以導向其他頁面
-    // window.location.href = "https://yourwebsite.com/thankyou.html";
-  });
+  //alert("感謝遊玩，遊戲已結束！");
+  // 可以導向其他頁面
+  // window.location.href = "https://yourwebsite.com/thankyou.html";
+});
 
   inputWord.addEventListener("keyup", (event) => {
     if (event.key === "Enter") {

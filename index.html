@@ -10,7 +10,7 @@
       padding: 0;
     }
     body {
-      font-family: "Noto Sans TC", sans-serif;
+      font-family: "Noto Sans TC", Arial, sans-serif;
       background: #1a1a1a;
       color: #f0f0f0;
       display: flex;
@@ -172,6 +172,9 @@
       z-index: 9999;
     }
   </style>
+
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+
 </head>
 
 <body>
@@ -181,39 +184,45 @@
   background-color: rgba(0,0,0,0.8);
   color: white;
   display: flex; flex-direction: column; justify-content: center; align-items: center;
-  padding: 20px; text-align: center; z-index: 10000;
+  padding: 20px; text-align: center; z-index: 1000;
 ">
   <!-- <h1><img src="./kylin1.png" alt="成功圖片" style="max-width: 40vw; max-height: 30vh;" /></h1> -->
   <h2>遊戲說明</h2>
-  <h3 style="margin: 10px">歡迎參加本次活動，請找到關卡並輸入答案。按確定開始遊戲。</h3>
+  <h3 style="margin: 10px">歡迎參加本次活動，請找到關卡並輸入答案。按確定後開始遊戲。</h3>
   <button id="startGameBtn" style="
     margin-top: 20px;
     font-size: 1.5rem;
     padding: 10px 30px;
     cursor: pointer;
-  ">確定開始</button>
+  ">確定</button>
 </div>
 
 <!-- 遊戲內容外層容器先隱藏 -->
-<div id="game-wrapper" style="display:none;">
+<!-- <div id="game-wrapper" style="display:none;"> -->
   <!-- 這裡放你的地圖與遊戲內容的所有元素 -->
-</div>
+<!-- </div> -->
 
-<h1>齊奔馬，走三關</h1>
+<h2>齊奔馬，走三關</h2>
 
 <div id="map-container">
   <img id="map-image" src="main.jpg" alt="地圖" />
   <!-- 標記點將用 JS 動態產生 -->
 </div>
 
-<div id="status"></div>
+
 
 <div id="game-container">
   <p>請回答關卡 <span id="level-display">1</span> 的字：</p>
   <input id="inputWord" maxlength="1" autocomplete="off" autofocus />
+  <!-- autocomplete="off"禁止瀏覽器自動帶出之前輸入過的內 autofocus頁面載入時，游標會自動停在這個輸入框裡-->
   <!-- <br /> -->
   <button id="submitBtn">確定</button>
   <div id="message"></div>
+</div>
+
+<div id="action-buttons">
+  <button id="restartGameBtn">再玩一次</button>
+  <button id="endGameBtn">結束遊戲</button>
 </div>
 
 <!-- 闖關成功圖片 -->
@@ -226,7 +235,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 11000;
+  z-index: 1100;
   animation: zoomIn 0.5s ease forwards;
   ">
   <div style="border-radius: 15px; box-shadow: 0 0 20px #ffe;text-align:center">
@@ -243,15 +252,16 @@
   
 </div>
 
+<div id="status"></div>
+
+
+
 <div id="success-area">
   <h2>恭喜你，所有關卡完成！</h2>
   <!-- <button id="restartBtn">重新開始</button> -->
 </div>
 
-<div id="action-buttons">
-  <button id="restartGameBtn">再玩一次</button>
-  <button id="endGameBtn">結束遊戲</button>
-</div>
+
 
 <canvas id="fireworkCanvas"></canvas>
 
@@ -260,11 +270,11 @@
   // JavaScript 部分（放在遊戲 JS 程式碼前面或 DOMContentLoaded 裡）
   const introModal = document.getElementById("intro-modal");
   const startGameBtn = document.getElementById("startGameBtn");
-  const gameWrapper = document.getElementById("game-wrapper");
+  //const gameWrapper = document.getElementById("game-wrapper");
 
   startGameBtn.addEventListener("click", () => {
     introModal.style.display = "none";  // 隱藏說明框
-    gameWrapper.style.display = "block"; // 顯示遊戲主區塊
+    //gameWrapper.style.display = "block"; // 顯示遊戲主區塊
     // （如果需要，也可以呼叫初始化遊戲或載入進度的函式）
   });
 

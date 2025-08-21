@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>三關文字闖關遊戲 - 地圖互動版（雙語版）</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Noto Sans TC", Arial, sans-serif;
+      background: #1a1a1a;
+      color: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      padding: 20px;
+    }
+
+    #language-selector-container {
+      width: 480px;
+      max-width: 100%;
+      margin: 15px auto;
+      text-align: center;
+    }
+
+    #map-container {
+      position: relative;
+      width: 480px;
+      max-width: 100%;
+      border: 2px solid #333;
+      border-radius: 10px;
+      background: #222;
+    }
+
+    #map-image {
+      width: 100%;
+      display: block;
+      border-radius: 10px;
+    }
+
+    .marker {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      position: absolute;
+      cursor: pointer;
+      border: 2px solid white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-weight: bold;
+      user-select: none;
+      transition: background-color 0.3s ease;
+    }
+
+    .marker.unvisited {
+      background-color: blue;
+    }
+
+    .marker.visited {
+      background-color: red;
+    }
+
+    .tooltip {
+      position: absolute;
+      bottom: 130%;
+      background: #222;
+      color: #eee;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .marker:hover .tooltip {
+      opacity: 1;
+    }
+
+    #game-container {
+      max-width: 480px;
+      border: 2px solid #333;
+      border-radius: 10px;
+      padding: 16px;
+      margin: 20px auto 0;
+      text-align: center;
+      background: #222;
+      display: none;
+    }
+
+    input {
+      font-size: 2rem;
+      padding: 10px;
+      width: 80%;
+      max-width: 300px;
+      border: 3px solid #6699ff;
+      border-radius: 8px;
+      background-color: #222;
+      color: #eee;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.3s ease;
+      margin-bottom: 20px;
+    }
+
+    input:focus {
+      border-color: #aabfff;
+      box-shadow: 0 0 10px #aabfff;
+    }
+
+    button {
+      font-size: 1.4rem;
+      padding: 12px 36px;
+      border: none;
+      border-radius: 10px;
+      background-color: #337ab7;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin: 1rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(255, 255, 255, 0.4) inset, 0 -3px 8px rgba(0, 0, 0, 0.15) inset;
+      transition: box-shadow 0.3s;
+    }
+
+    button:hover {
+      background-color: #5599e6;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(255, 255, 255, 0.5) inset, 0 -4px 12px rgba(0, 0, 0, 0.2) inset;
+    }
+
+    #message {
+      font-size: 1.3rem;
+      min-height: 36px;
+      font-weight: 600;
+    }
+
+    #status {
+      text-align: left;
+      max-width: 480px;
+      margin: 0 auto 10px auto;
+      font-size: 1rem;
+      color: #aaffaa;
+    }
+
+    #success-area {
+      max-width: 480px;
+      margin: 20px auto;
+      text-align: center;
+      color: #aaffaa;
+      text-shadow: 1px 1px 3px #004400;
+      display: none;
+    }
+
+    #action-buttons {
+      max-width: 480px;
+      margin: 10px auto 0;
+      text-align: center;
+    }
+
+    #action-buttons button {
+      margin: 0 10px;
+      padding: 10px 30px;
+    }
+
+    @keyframes zoomIn {
+      from {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    #fireworkCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    #intro-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      text-align: center;
+      z-index: 1000;
+    }
+
+    #success-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.8);
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1100;
+      animation: zoomIn 0.5s ease forwards;
+    }
+
+    #success-overlay>div {
+      border-radius: 15px;
+      box-shadow: 0 0 20px #ffe;
+      text-align: center;
+      padding: 10px;
+    }
+
+    #success-overlay img {
+      max-width: 80vw;
+      max-height: 60vh;
+      border-radius: 15px;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  
+   <!-- 遊戲開始說明視窗 -->
+  
+  <div id="intro-modal">
+
+    <!-- 語言選擇 -->
+    <div id="language-selector-container"> <label for="language-selector"
+        style="font-size:1rem; margin-right:8px; user-select:none;">語言 / Language:</label> <select id="language-selector"
+        style="font-size:1.2rem; padding: 4px 8px;">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+
+    <h2>遊戲說明</h2>
+    <h3 style="margin: 10px">歡迎參加本次活動，請找到關卡並輸入答案。按確定後開始遊戲。</h3>
+    <button id="startGameBtn"
+      style="margin-top: 20px; font-size: 1.5rem; padding: 10px 30px; cursor: pointer;">確定
+    </button>
+  </div>
+  <h2 id="gameTitle">請點圖中藍色編碼答題</h2>
+  <div id="map-container">
+    <img id="map-image" src="main.jpg" alt="地圖" /> <!-- 標記點將用 JS 動態產生 -->
+  </div>
+
+  <!-- 回答區 -->
+  <div id="game-container">
+    <p>請回答關卡 <span id="level-display">1</span> 的字：</p>
+    <input id="inputWord" maxlength="1" autocomplete="off" autofocus />
+    <button id="submitBtn">確定</button>
+    <div id="message"></div>
+  </div>
+  <div id="action-buttons">
+    <button id="restartGameBtn">再玩一次</button> <button id="endGameBtn">結束遊戲</button>
+  </div>
+
+  <!-- 闖關成功圖片 -->
+  <div id="success-overlay">
+    <div> <img src="./kylin1.png" alt="成功圖片" />
+      <p>過關</p>
+      <button id="closeOverlayBtn"
+        style="
+        margin-top: 20px;
+        padding: 10px 30px;
+        font-size: 1.2rem;
+        cursor: pointer;">
+        好
+      </button>
+    </div>
+  </div>
+  <div id="status"></div>
+  <div id="success-area">
+    <h2>恭喜你，所有關卡完成！</h2>
+  </div>
+  <canvas id="fireworkCanvas"></canvas>
+
+  <script>
+    const langData = {
+      zh: { introTitle: "遊戲說明", introContent: "歡迎參加本次活動，請找到關卡並輸入答案。按確定後開始遊戲。", startButton: "確定", levelPrompt: "請回答關卡 {level} 的字：", submitBtn: "確定", gameTitle: "請點圖中藍色編碼答題", levelCorrect: "關卡 {level} 答對了！", levelCompleteMsg: "恭喜你，所有關卡完成！", overlayText: "過關", overlayButton: "好", restartBtn: "再玩一次", endBtn: "結束遊戲", playAgain: "重新開始", inputEmpty: "請輸入字元", inputWrong: "答錯了，請再試一次", finishedAlert: "{title} 已完成，請挑戰其他關卡", restartAlert: "遊戲已重新開始！", endMessage: "感謝您的遊玩，遊戲已結束！" },
+      en: { introTitle: "Game Instructions", introContent: "Welcome to this event! Please find the checkpoints and enter the answers. Press start to begin.", startButton: "Start", levelPrompt: "Please answer the word for Level {level}:", submitBtn: "Submit", gameTitle: "Please click the blue markers on the map to answer the questions.", levelCorrect: "Level {level} Correct!", levelCompleteMsg: "Congratulations! All levels completed!", overlayText: "Passed", overlayButton: "OK", restartBtn: "Play Again", endBtn: "End Game", playAgain: "Restart", inputEmpty: "Please enter a character", inputWrong: "Wrong answer, try again", finishedAlert: "{title} completed, please try other levels", restartAlert: "Game restarted!", endMessage: "Thank you for playing, the game has ended!" }
+    };
+    let currentLang = localStorage.getItem("gameLang") || "zh";
+    const languageSelector = document.getElementById("language-selector");
+    const introModal = document.getElementById("intro-modal");
+    const startGameBtn = document.getElementById("startGameBtn");
+    const mapContainer = document.getElementById("map-container");
+    const gameContainer = document.getElementById("game-container");
+    const levelDisplay = document.getElementById("level-display");
+    const inputWord = document.getElementById("inputWord");
+    const submitBtn = document.getElementById("submitBtn");
+    const gameTitle = document.getElementById("gameTitle");
+    const messageDiv = document.getElementById("message");
+    const statusDiv = document.getElementById("status");
+    const successArea = document.getElementById("success-area");
+    const restartGameBtn = document.getElementById("restartGameBtn");
+    const endGameBtn = document.getElementById("endGameBtn");
+    const successOverlay = document.getElementById("success-overlay");
+    const closeOverlayBtn = document.getElementById("closeOverlayBtn");
+    const checkpoints = [{ id: 0, label: "1", title: "關卡1", xPercent: 0.5, yPercent: 0.35 }, { id: 1, label: "2", title: "關卡2", xPercent: 0.65, yPercent: 0.4 }, { id: 2, label: "3", title: "關卡3", xPercent: 0.4, yPercent: 0.5 }];
+    const answers = ["仁", "禮", "義"];
+    let finishedLevels = JSON.parse(localStorage.getItem("finishedLevels")) || [false, false, false];
+    let currentLevel = null;
+    const totalLevels = checkpoints.length;
+    function applyLanguage(lang) { currentLang = lang;
+      localStorage.setItem("gameLang", lang);
+      introModal.querySelector("h2").textContent = langData[lang].introTitle;
+      introModal.querySelector("h3").textContent = langData[lang].introContent;
+      startGameBtn.textContent = langData[lang].startButton;
+      submitBtn.textContent = langData[lang].submitBtn;
+      gameTitle.textContent = langData[lang].gameTitle;
+      restartGameBtn.textContent = langData[lang].restartBtn;
+      endGameBtn.textContent = langData[lang].endBtn;
+      successOverlay.querySelector("p").textContent = langData[lang].overlayText;
+      closeOverlayBtn.textContent = langData[lang].overlayButton;
+      successArea.querySelector("h2").textContent = langData[lang].levelCompleteMsg;
+      updateLevelPrompt(); updateStatus();
+      updateMessage(""); }
+      function updateLevelPrompt() {
+        if (currentLevel !== null) {
+          const prompt = langData[currentLang].levelPrompt.replace("{level}", currentLevel + 1);
+          gameContainer.querySelector("p").textContent = prompt; }
+        }
+      function updateMessage(msg) {
+        if (msg === "") { messageDiv.textContent = ""; } else { messageDiv.textContent = msg; }
+      }
+      function updateStatus() {
+        let statusHTML = "";
+        for (let i = 0;i < totalLevels; i++) {
+          statusHTML += `${currentLang === "zh" ? "關卡" : "Level"} ${i + 1}: `; statusHTML += finishedLevels[i] ? `<span class="completed-check">✔ ${currentLang === "zh" ? "已完成" : "Completed"}</span><br>` : `${currentLang === "zh" ? "未完成" : "Incomplete"}<br>`;
+        }
+        statusDiv.innerHTML = statusHTML;
+      }
+      function createMarkers() {
+        const oldMarkers = document.querySelectorAll(".marker");
+        oldMarkers.forEach(m => m.remove());
+        checkpoints.forEach(({ id, label, title, xPercent, yPercent }) => {
+          const marker = document.createElement("div");
+          marker.classList.add("marker");
+          marker.classList.add(finishedLevels[id] ? "visited" : "unvisited");
+          marker.style.left = `calc(${xPercent * 100}% - 12px)`;
+          marker.style.top = `calc(${yPercent * 100}% - 12px)`;
+          marker.textContent = label;
+          const tooltip = document.createElement("span");
+          tooltip.className = "tooltip";
+          tooltip.textContent = finishedLevels[id] ? `${title}（${currentLang === "zh" ? "已完成" : "Completed"}）` : title;
+          marker.appendChild(tooltip);
+          marker.addEventListener("click", () => {
+            if (finishedLevels[id]) {
+              alert(langData[currentLang].finishedAlert.replace("{title}", title));
+              return;
+            } currentLevel = id; updateUI();
+          });
+          mapContainer.appendChild(marker);
+        });
+      }
+      function updateUI() {
+        if (currentLevel === null) {
+          gameContainer.style.display = "none";
+          successArea.style.display = "none";
+          updateMessage("");
+        } else {
+          levelDisplay.textContent = currentLevel + 1;
+          inputWord.value = "";
+          inputWord.focus();
+          updateMessage("");
+          gameContainer.style.display = "block";
+          successArea.style.display = "none"; updateLevelPrompt();
+        }
+      }
+      function showSuccessOverlay() {
+        successOverlay.style.display = "flex";
+      }
+      closeOverlayBtn.addEventListener("click", () => {
+        successOverlay.style.display = "none";
+      });
+      submitBtn.addEventListener("click", () => {
+        const userInput = inputWord.value.trim();
+        if (userInput === "") {
+          messageDiv.style.color = "red";
+          updateMessage(langData[currentLang].inputEmpty);
+          return;
+        }
+        if (userInput === answers[currentLevel]) {
+          finishedLevels[currentLevel] = true;
+          localStorage.setItem("finishedLevels", JSON.stringify(finishedLevels));
+          messageDiv.style.color = "lightgreen";
+          updateMessage(langData[currentLang].levelCorrect.replace("{level}", currentLevel + 1));
+          updateStatus(); createMarkers(); if (finishedLevels.every(val => val === true)) { // 全部關卡完成
+          currentLevel = null;
+          gameContainer.style.display = "none";
+          successArea.style.display = "block";
+          showFireworks();
+        } else {
+          currentLevel = null;
+          gameContainer.style.display = "none";
+          showSuccessOverlay(); }
+        } else {
+          messageDiv.style.color = "pink";
+          updateMessage(langData[currentLang].inputWrong);
+          inputWord.value = ""; inputWord.focus();
+        }
+      });
+    function resetGameData() {
+      finishedLevels = [false, false, false];
+      localStorage.removeItem("finishedLevels");
+      localStorage.removeItem("gameLang");
+      currentLevel = null;
+      updateStatus();
+      createMarkers();
+      gameContainer.style.display = "none";
+      successArea.style.display = "none";
+      stopFireworks();
+      updateMessage("");  //清空訊息顯示區的文字內容
+    }
+    restartGameBtn.addEventListener("click", () => { resetGameData();
+      alert(langData[currentLang].restartAlert); });
+    endGameBtn.addEventListener("click", () => {
+      resetGameData(); // 清空畫面內容
+      Array.from(document.body.children).forEach(child => { child.style.display = "none"; });
+    const endMessage = document.createElement("div"); endMessage.style.color = "lightgreen";
+    endMessage.style.fontSize = "1.5rem";
+    endMessage.style.textAlign = "center";
+    endMessage.style.marginTop = "40px";
+    endMessage.textContent = langData[currentLang].endMessage;
+    document.body.appendChild(endMessage);
+    });
+    inputWord.addEventListener("keyup", (event) => { if (event.key === "Enter") { submitBtn.click(); } }); startGameBtn.addEventListener("click", () => { introModal.style.display = "none"; });
+    languageSelector.value = currentLang;
+    languageSelector.addEventListener("change", e => { applyLanguage(e.target.value); });
+    window.addEventListener("load", () => { applyLanguage(currentLang);
+      createMarkers(); updateUI(); updateStatus(); }); // 煙火動畫相關（維持原本設定
+    const canvas = document.getElementById("fireworkCanvas");
+    const ctx = canvas.getContext("2d");
+    let cw, ch;
+    function resizeCanvas() { cw = canvas.width = window.innerWidth;
+      ch = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    class Firework {
+      constructor() { this.x = Math.random() * cw; this.y = ch;
+        this.targetY = Math.random() * ch / 2 + ch / 4;
+        this.exploded = false;
+        this.particles = [];
+        this.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
+      }
+      update() {
+        if (!this.exploded) { this.y -= 5;
+          if (this.y <= this.targetY) { this.exploded = true;
+            this.createParticles();
+          }
+        }
+        this.particles.forEach((p) => p.update());
+        this.particles = this.particles.filter(p => !p.dead);
+      }
+      createParticles() { for (let i = 0; i < 50; i++) {
+        this.particles.push(new Particle(this.x, this.y, this.color));
+        }
+      }
+      draw() {
+        if (!this.exploded) { ctx.beginPath();
+        ctx.arc(this.x, this.y, 8, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        }
+        this.particles.forEach(p => p.draw());
+      }
+      isDone() { return this.exploded && this.particles.length === 0;
+      }
+    }
+    
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.radius = 4;
+        this.color = color;
+        this.vx = (Math.random() - 0.5) * 5;
+        this.vy = (Math.random() - 0.5) * 5;
+        this.gravity = 0.1;
+        this.alpha = 1;
+        this.dead = false;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += this.gravity;
+        this.alpha -= 0.01;
+        if (this.alpha <= 0) {
+          this.dead = true;
+        };
+      }
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color; ctx.fill();
+        ctx.restore();
+      }
+    }
+    let fireworks = [];
+    let animationId;
+    function showFireworks() {
+      fireworks = [];
+      for (let i = 0; i < 30; i++) fireworks.push(new Firework());
+      animate();
+      setTimeout(stopFireworks, 10000);
+    }
+    function animate() {
+      ctx.clearRect(0, 0, cw, ch);
+      fireworks.forEach(fw => { fw.update(); fw.draw(); });
+      fireworks = fireworks.filter(fw => !fw.isDone());
+      if (fireworks.length > 0) {animationId = requestAnimationFrame(animate)};
+    }
+    function stopFireworks() {
+      cancelAnimationFrame(animationId);
+      ctx.clearRect(0, 0, cw, ch);
+    }
+  </script>
+</body>
+
+</html>

@@ -186,7 +186,7 @@
   display: flex; flex-direction: column; justify-content: center; align-items: center;
   padding: 20px; text-align: center; z-index: 1000;
 ">
-  <!-- <h1><img src="./kylin1.png" alt="成功圖片" style="max-width: 40vw; max-height: 30vh;" /></h1> -->
+  <!-- <h1><img src="./kylin1.png" alt="成功圖片" style="max-width: 40vw; max-height: 30vh;" /></h1> //歡迎圖片-->
   <h2>遊戲說明</h2>
   <h3 style="margin: 10px">歡迎參加本次活動，請找到關卡並輸入答案。按確定後開始遊戲。</h3>
   <button id="startGameBtn" style="
@@ -202,15 +202,14 @@
   <!-- 這裡放你的地圖與遊戲內容的所有元素 -->
 <!-- </div> -->
 
+<!-- 圖片區 -->
 <h2>請點圖上藍標答題</h2>
-
 <div id="map-container">
   <img id="map-image" src="main.jpg" alt="地圖" />
   <!-- 標記點將用 JS 動態產生 -->
 </div>
 
-
-
+<!-- 回答區 -->
 <div id="game-container">
   <p>請回答關卡 <span id="level-display">1</span> 的字：</p>
   <input id="inputWord" maxlength="1" autocomplete="off" autofocus />
@@ -247,9 +246,7 @@
     font-size: 1.2rem;
     cursor: pointer;
     ">好</button>
-  </div>
-  
-  
+  </div>  
 </div>
 
 <div id="status"></div>
@@ -363,19 +360,19 @@
   });
 
   submitBtn.addEventListener("click", () => {
-  const userInput = inputWord.value.trim();                 // 讀取輸入框 inputWord 的值，trim() 去掉前後空白。
+  const userInput = inputWord.value.trim();  // 讀取輸入框 inputWord 的值，trim() 去掉前後空白。
 
   if (userInput === "") {
     messageDiv.style.color = "red";
     messageDiv.textContent = "請輸入字元";
-    return;                                                 // 結束這次點擊事件處理（後面不再往下跑）。
+    return;  // 結束這次點擊事件處理（後面不再往下跑）。
   }
 
   if (userInput === answers[currentLevel]) {
-    finishedLevels[currentLevel] = true;                    // 標記該關卡為已完成（將陣列對應位置設為 true）。
-    localStorage.setItem(                                   // 把 finishedLevels 陣列存進瀏覽器 localStorage，
-      "finishedLevels",                                     // key 名叫 "finishedLevels"，
-      JSON.stringify(finishedLevels)                        // 值要用 JSON.stringify 轉成字串才可存。
+    finishedLevels[currentLevel] = true;  // 標記該關卡為已完成（將陣列對應位置設為 true）。
+    localStorage.setItem(  // 把 finishedLevels 陣列存進瀏覽器 localStorage，
+      "finishedLevels",   // key 名叫 "finishedLevels"，
+      JSON.stringify(finishedLevels)   // 值要用 JSON.stringify 轉成字串才可存。
     );
     messageDiv.style.color = "lightgreen";
     messageDiv.textContent = `關卡 ${currentLevel + 1} 答對了！`; // 顯示「第幾關答對了」的文字。
@@ -485,21 +482,21 @@ endGameBtn.addEventListener("click", () => {
     constructor() {
       this.x = Math.random() * cw;
       this.y = ch;
-      this.targetY = Math.random() * ch / 2 + ch / 4;
+      this.targetY = Math.random() * ch / 2 + ch / 4;  // this.targetY 會落在 畫布高度的 1/4 到 3/4 之間
       this.exploded = false;
       this.particles = [];
       this.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
     }
     update() {
       if (!this.exploded) {
-        this.y -= 5;  // 上升速度調慢，延長時間
-        if (this.y <= this.targetY) {
+        this.y -= 5;  // 往上移動在 canvas 坐標系中，y 值越小
+        if (this.y <= this.targetY) { // 越往上 (y 軸往上 → y 值變小)，速度是 5px/frame，上升速度調慢，延長時間
           this.exploded = true;
-          this.createParticles();
+          this.createParticles();  // 呼叫 createParticles() → 生成煙火粒子
         }
       }
-      this.particles.forEach((p) => p.update());
-      this.particles = this.particles.filter((p) => !p.dead);
+      this.particles.forEach((p) => p.update());  // 對每個粒子呼叫 update() 方法，意思是讓粒子自己更新位置、速度、顏色或消失狀態. 比喻：每個粒子自己算下一個位置，像物理引擎更新畫面
+      this.particles = this.particles.filter((p) => !p.dead);  // 只有「還活著的粒子」會被保留下來，dead=true 的粒子會被移除。比喻：粒子慢慢消失、飛出畫布或生命結束時，就從陣列裡清掉，避免浪費計算資源
     }
     createParticles() {
       for (let i = 0; i < 50; i++) { // 粒子數量從30增加到50

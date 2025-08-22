@@ -261,7 +261,7 @@
       style="margin-top: 20px; font-size: 1.5rem; padding: 10px 30px; cursor: pointer;">確定
     </button>
   </div>
-  <h2 id="gameTitle">請點圖中藍色編碼答題</h2>
+  <h2 id="gameTitle">請點圖中編碼答題</h2>
   <div id="map-container">
     <img id="map-image" src="main.jpg" alt="地圖" /> <!-- 標記點將用 JS 動態產生 -->
   </div>
@@ -299,8 +299,8 @@
 
   <script>
     const langData = {
-      zh: { introTitle: "遊戲說明", introContent: "歡迎參加本次活動，請找到關卡並輸入答案。按確定後開始遊戲。", startButton: "確定", levelPrompt: "請回答關卡 {level} 的字：", submitBtn: "確定", gameTitle: "請點圖中藍色編碼答題", levelCorrect: "關卡 {level} 答對了！", levelCompleteMsg: "恭喜你，所有關卡完成！", overlayText: "過關", overlayButton: "好", restartBtn: "再玩一次", endBtn: "結束遊戲", playAgain: "重新開始", inputEmpty: "請輸入字元", inputWrong: "答錯了，請再試一次", finishedAlert: "{title} 已完成，請挑戰其他關卡", restartAlert: "遊戲已重新開始！", endMessage: "感謝您的遊玩，遊戲已結束！" },
-      en: { introTitle: "Game Instructions", introContent: "Welcome to this event! Please find the checkpoints and enter the answers. Press start to begin.", startButton: "Start", levelPrompt: "Please answer the word for Level {level}:", submitBtn: "Submit", gameTitle: "Please click the blue markers on the map to answer the questions.", levelCorrect: "Level {level} Correct!", levelCompleteMsg: "Congratulations! All levels completed!", overlayText: "Passed", overlayButton: "OK", restartBtn: "Play Again", endBtn: "End Game", playAgain: "Restart", inputEmpty: "Please enter a character", inputWrong: "Wrong answer, try again", finishedAlert: "{title} completed, please try other levels", restartAlert: "Game restarted!", endMessage: "Thank you for playing, the game has ended!" }
+      zh: { introTitle: "遊戲說明", introContent: "歡迎參加本次活動，請找到關卡並輸入答案。按確定後開始遊戲。", startButton: "確定", levelPrompt: "請回答關卡 {level} 的字：", submitBtn: "確定", gameTitle: "請點圖中編碼答題", levelCorrect: "關卡 {level} 答對了！", levelCompleteMsg: "恭喜你，所有關卡完成！", overlayText: "過關", overlayButton: "好", restartBtn: "再玩一次", endBtn: "結束遊戲", playAgain: "重新開始", inputEmpty: "請輸入字元", inputWrong: "答錯了，請再試一次", finishedAlert: "{title} 已完成，請挑戰其他關卡", restartAlert: "遊戲已重新開始！", endMessage: "感謝您的遊玩，遊戲已結束！" },
+      en: { introTitle: "Game Instructions", introContent: "Welcome to this event! Please find the checkpoints and enter the answers. Press start to begin.", startButton: "Start", levelPrompt: "Please answer the word for Level {level}:", submitBtn: "Submit", gameTitle: "Please click the markers on the map to answer the questions.", levelCorrect: "Level {level} Correct!", levelCompleteMsg: "Congratulations! All levels completed!", overlayText: "Passed", overlayButton: "OK", restartBtn: "Play Again", endBtn: "End Game", playAgain: "Restart", inputEmpty: "Please enter a character", inputWrong: "Wrong answer, try again", finishedAlert: "{title} completed, please try other levels", restartAlert: "Game restarted!", endMessage: "Thank you for playing, the game has ended!" }
     };
     let currentLang = localStorage.getItem("gameLang") || "zh";
     const languageSelector = document.getElementById("language-selector");
@@ -320,7 +320,7 @@
     const successOverlay = document.getElementById("success-overlay");
     const closeOverlayBtn = document.getElementById("closeOverlayBtn");
     const checkpoints = [{ id: 0, label: "1", title: "關卡1", xPercent: 0.5, yPercent: 0.35 }, { id: 1, label: "2", title: "關卡2", xPercent: 0.65, yPercent: 0.4 }, { id: 2, label: "3", title: "關卡3", xPercent: 0.4, yPercent: 0.5 }];
-    const answers = ["仁", "禮", "義"];
+    const answers = ["智", "仁", "勇"];
     let finishedLevels = JSON.parse(localStorage.getItem("finishedLevels")) || [false, false, false];
     let currentLevel = null;
     const totalLevels = checkpoints.length;

@@ -398,9 +398,7 @@
       function showSuccessOverlay() {
         successOverlay.style.display = "flex";
       }
-      closeOverlayBtn.addEventListener("click", () => {
-        successOverlay.style.display = "none";
-      });
+  
       submitBtn.addEventListener("click", () => {
         const userInput = inputWord.value.trim();
         if (userInput === "") {
@@ -463,6 +461,36 @@
         submitBtn.click();
       }
     });
+    
+    //讓過關跳出的「好」按鈕也能用 Enter 鍵關閉視窗
+    let overlayOpen = false;  // 紀錄覆蓋層是否剛開啟
+    let overlayLock = false;  // 避免馬上關閉
+
+    function showSuccessOverlay() {
+      successOverlay.style.display = "flex";
+      overlayOpen = true;
+      overlayLock = true;
+      setTimeout(() => {
+        overlayLock = false;  // 一秒後才允許按 Enter 關閉
+      }, 1000);
+    }
+
+    // 覆蓋層關閉
+    closeOverlayBtn.addEventListener("click", () => {
+      successOverlay.style.display = "none";
+      overlayOpen = false;
+      overlayLock = false;
+    });
+
+    // Enter 鍵事件 
+    window.addEventListener("keyup", (event) => {
+      if (event.key === "Enter" && overlayOpen && !overlayLock) {
+        closeOverlayBtn.click();
+      }
+    });
+
+
+
     startGameBtn.addEventListener("click", () => {
       introModal.style.display = "none";
     });
